@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Levels</title>
+    <!-- Use the refresh_counter in the URL to force a page refresh -->
+    <link rel="stylesheet" href="style.css?v={{ refresh_counter }}">
+</head>
+<body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+
+    <h1 style="margin-bottom: 20px;">Water Level</h1>
+
+    <div class="mug">
+        <div class="handle"></div>
+        <div class="liquid" style="height: calc({{ water_percent }} * 1.5px); width: 110px;" id="waterLiquid"></div>
+    </div>
+
+    <p style="margin-top: 20px;">Water Level: <span id="waterPercentDisplay">{{ water_percent }}</span>%</p>
+
+    <h1 style="margin-top: 40px; margin-bottom: 20px;">Battery Level</h1>
+
+    <div class="battery-container">
+        <div class="battery">
+            <div class="battery-body"></div>
+            <div class="liquid2" style="height: calc({{ battery_percent }} * 1.5px); width: 110px;" id="batteryLiquid"></div>
+        </div>
+    </div>
+
+    <p style="margin-top: 20px;">Battery Level: <span id="batteryPercentDisplay">{{ battery_percent }}</span>%</p>
+
+    <script>
+        // Inline script to implement the refresh_counter
+        var refresh_counter = {{ refresh_counter }};
+    
+        // Function to update the liquid animation based on the 'percent' value
+        function updateLiquidAnimation(liquidElementId, percent, percentDisplayId) {
+            const liquidElement = document.getElementById(liquidElementId);
+    
+            // Calculate the adjusted height for the liquid
+            const liquidHeight = `calc(${percent} * 1.5px)`;
+            const adjustedHeight = `calc(${percent} * 1.5px - 15px)`;
+    
+            // Apply the animation using CSS transitions
+            liquidElement.style.transition = 'height 2s linear';
+            liquidElement.style.height = liquidHeight;
+    
+            // Set up a wavy water animation at the top and bottom using CSS keyframes
+            const waveAnimation = document.createElement('style');
+            waveAnimation.innerHTML = `
+                @keyframes wave {
+                    0%, 100% {
+                        transform: translate(-50%, 0);
+                    }
+                    50% {
+                        transform: translate(-50%, -3px);
+                    }
+                }
+    
+                @keyframes bottomWave {
+                    0%, 100% {
+                        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                    }
+                    50% {
+                        clip-path: polygon(0 3%, 100% 6%, 100% 100%, 0 100%);
+                    }
+                }
+            `;
+            document.head.appendChild(waveAnimation);
+    
+            // Apply the wave and bottomWave animations to the liquid element
+            liquidElement.style.animation = 'wave 2s infinite linear, bottomWave 2s infinite linear';
+    
+            // Set up an event listener for transition end to toggle between heights
+            liquidElement.addEventListener('transitionend', function() {
+                if (liquidElement.style.height === liquidHeight) {
+                    liquidElement.style.height = adjustedHeight;
+                } else {
+                    liquidElement.style.height = liquidHeight;
+                }
+            }, { once: false });
+
+            // Update the percent value display
+            document.getElementById(percentDisplayId).textContent = percent;
+        }
+
+        // Function to update the content dynamically
+        function updateContent() {
+            // Fetch the updated water percent value
+            fetch('/get_percent')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the refresh_counter and call the function with the updated 'percent' value
+                    refresh_counter = data.refresh_counter;
+                    updateLiquidAnimation('waterLiquid', data.percent, 'waterPercentDisplay');
+                })
+                .catch(error => console.error('Error:', error));
+
+            // Fetch the updated battery percent value
+            fetch('/get_percent')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the refresh_counter and call the function with the updated 'percent' value
+                    refresh_counter = data.refresh_counter;
+                    updateLiquidAnimation('batteryLiquid', data.percent, 'batteryPercentDisplay');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    
+        // Call the function initially to set up the animation
+        updateContent();
+    
+        // Optionally, set up a timer to refresh the content periodically
+        setInterval(updateContent, 2000);  // Refresh every 2 seconds
+    </script>
+    
+    <style>
+        .mug {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            background-color: #8d6e63;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .liquid {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2196F3;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .battery-container {
+            display: inline-block;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .battery {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            background-color: #000000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .liquid2 {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgb(83, 201, 87);
+            border-radius: 0 0 10px 10px;
+        }
+    </style>
+
+</body>
+</html>
