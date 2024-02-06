@@ -6,7 +6,7 @@ app = Flask(__name__)
 refresh_counter = 0
 
 # Initial percent value
-percent = 50
+percent = 0
 
 @app.route('/')
 def index():
