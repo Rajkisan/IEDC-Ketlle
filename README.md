@@ -1,7 +1,7 @@
 Deployed link
-https://kettle-dashboard-8r04o593j-rajkisans-projects.vercel.app/
+https://kettle-dashboard.vercel.app/
 <br>
 Updation Link 
-https://kettle-dashboard-8r04o593j-rajkisans-projects.vercel.app/update_fluid?percent={percent}
+https://kettle-dashboard.vercel.app/update_fluid?percent={percent}
 
 
