@@ -86,23 +86,14 @@
 
         // Function to update the content dynamically
         function updateContent() {
-            // Fetch the updated water percent value
-            fetch('/get_percent')
+            // Fetch the updated percent values
+            fetch('/update_fluid')
                 .then(response => response.json())
                 .then(data => {
-                    // Update the refresh_counter and call the function with the updated 'percent' value
+                    // Update the refresh_counter and call the function with the updated 'percent' and 'percent2' values
                     refresh_counter = data.refresh_counter;
                     updateLiquidAnimation('waterLiquid', data.percent, 'waterPercentDisplay');
-                })
-                .catch(error => console.error('Error:', error));
-
-            // Fetch the updated battery percent value
-            fetch('/get_percent')
-                .then(response => response.json())
-                .then(data => {
-                    // Update the refresh_counter and call the function with the updated 'percent' value
-                    refresh_counter = data.refresh_counter;
-                    updateLiquidAnimation('batteryLiquid', data.percent, 'batteryPercentDisplay');
+                    updateLiquidAnimation('batteryLiquid', data.percent2, 'batteryPercentDisplay');
                 })
                 .catch(error => console.error('Error:', error));
         }

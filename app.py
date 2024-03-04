@@ -7,6 +7,7 @@ refresh_counter = 0
 
 # Initial percent value
 percent = 0
+percent2 = 0
 
 @app.route('/')
 def index():
@@ -18,21 +19,21 @@ def index():
 
 @app.route('/update_fluid')
 def update_fluid():
-    global percent, refresh_counter
+    global percent, percent2, refresh_counter
 
-    # Get the 'percent' parameter from the query string, default to the global 'percent' if not provided
     percent_from_url = int(request.args.get('percent', percent))
+    percent2_from_url = int(request.args.get('percent2', percent2))
 
-    # Ensure the percent is within a valid range (0 to 100)
     percent_from_url = max(0, min(percent_from_url, 100))
+    percent2_from_url = max(0, min(percent2_from_url, 100))
 
-    # Update the global 'percent' variable
     percent = percent_from_url
+    percent2 = percent2_from_url
 
-    # Increment the counter on every request
     refresh_counter += 1
 
-    return jsonify({'refresh_counter': refresh_counter, 'percent': percent})
+    return jsonify({'refresh_counter': refresh_counter, 'percent': percent, 'percent2': percent2})
+
 
 @app.route('/get_percent')
 def get_percent():
