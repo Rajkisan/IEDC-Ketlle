@@ -120,8 +120,10 @@
             
             if (checkBox.checked) {
                 httpRequest.open("GET", "http://192.168.29.234/on", true);
+                console.log("ON");
             } else {
                 httpRequest.open("GET", "http://192.168.29.234/off", true);
+                console.log("OFF");
             }
             
             httpRequest.send();
@@ -221,6 +223,21 @@
             -ms-transform: translateX(26px);
             transform: translateX(26px);
         }
+        @media only screen and (max-width: 600px) {
+    /* Reduce the size of the switch container */
+    .switch {
+        width: 40px;
+        height: 20px;
+        top: 50px;
+        left: 80px;
+    }
+
+    /* Hide the toggle switch heading */
+    h1[style^="margin-top: 0; margin-bottom: 20px;"] {
+        display: none;
+        
+    }
+}
     </style>
 
 </body>
