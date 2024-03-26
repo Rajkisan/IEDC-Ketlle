@@ -1,14 +1,18 @@
 #include <SPI.h>
+#include <HTTPClient.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
-#include <Fonts/FreeSansOblique10pt7b.h>
+#include <FreeSansOblique10pt7b.h>
 #include <NewPing.h>
+
 
 #include "WiFi.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
+WiFiServer server(80);
+int i = 1;
+const int pin = 16; // Digital pin to control
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = 25;     
 
@@ -83,10 +87,34 @@ void setup() {
   display.begin(i2c_Address, true); // Address 0x3C default
   display.clearDisplay();
   WiFi.begin(ssid, password);
+
+
+  // Print the IP address
+  
+  pinMode(pin, OUTPUT);
   sensors.begin();
 }
 
 void loop() { 
+    WiFiClient client = server.available();
+
+
+  // Read the first line of the request
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
+
+  // Check if the client request is for "/on"
+  if (request.indexOf("/on") != -1) {
+    digitalWrite(pin, LOW); // Turn on the pin
+    client.println("Pin turned ON");
+  } else if (request.indexOf("/off") != -1) {
+    digitalWrite(pin, HIGH); // Turn off the pin
+    client.println("Pin turned OFF");
+  } else {
+    client.println("Invalid request"); // Send a response for any other request
+  }
+
   display.setFont(&FreeSansOblique10pt7b);
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -109,6 +137,7 @@ void loop() {
     display.fillRect(0, 5, 16, 16, SH110X_BLACK); 
     display.println(" ");
     Serial.println("Connecting to WiFi..");
+    i=0;
     display.drawBitmap(0, 5, no_wifi, 16, 16, 1);
     display.drawBitmap(0, 40, temp, 16, 16, 1);
     display.drawBitmap(25, 7, water, 16, 16, 1);
@@ -119,7 +148,18 @@ void loop() {
   }
 
   Serial.println("Connected to the WiFi network");
+  
+  Serial.println(WiFi.localIP());
+  if (i == 1){
+      server.begin();
+  Serial.println(WiFi.localIP());
+    Serial.println("Server started");
   Serial.println("");
+  }
+
+    i+=1;
+  
+
 //  Serial.println("WiFi connected.");
 //  Serial.println("IP address: ");
 //  Serial.println(WiFi.localIP());
@@ -150,37 +190,49 @@ void loop() {
     Serial.print("cm");
     Serial.println();
     if (distance > 11) {
-      Serial.println("Please close lid");  
+      Serial.println("Please close lid");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+("0");
+      sendHttpRequest(str1);    
       display.setCursor(50, 20);
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.println("_ _%");
       display.display();
     } else if (distance >= 9) {
       Serial.println("Empty!");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+String("0");
+      sendHttpRequest(str1);   
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.setCursor(50, 20);
       display.println("0%");
       display.display();
     } else if (distance == 6 || distance == 7 || distance == 8) {
       Serial.println("25%");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+String("25");
+      sendHttpRequest(str1);   
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.setCursor(50, 20);
       display.println("25%");
       display.display();
     } else if (distance == 4 || distance == 5) {
       Serial.println("50%");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+String("50");
+      sendHttpRequest(str1);
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.setCursor(50, 20);
       display.println("50%");
       display.display();
-    } else if (distance == 3 || distance == 2) {
+    } else if (distance == 3 ) {
       Serial.println("75%");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+String("75");
+      sendHttpRequest(str1);
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.setCursor(50, 15);
       display.println("75%");
       display.display();
-    } else if (distance == 1) {
+    } else if (distance == 1 || distance == 2) {
       Serial.println("Full!");
+      String str1=String("https://kettle-dashboard.vercel.app/update_fluid?percent=")+String("100");
+      sendHttpRequest(str1);
       display.fillRect(50, 5, 40, 20, SH110X_BLACK);
       display.setCursor(50, 20);
       display.println("Full");
@@ -189,7 +241,9 @@ void loop() {
   }
 //  voltage=12;
     if (voltage > 16) {
-      Serial.println("Full Charge");  
+      Serial.println("Full Charge");
+      String str2=String("https://kettle-dashboard.vercel.app/update_fluid?percent2=")+String("100");
+      sendHttpRequest(str2);  
       display.fillRect(80, 37, 16, 20, SH110X_BLACK);
       display.drawBitmap(80, 39, bat_3, 16, 16, 1);
       display.display();
@@ -197,12 +251,16 @@ void loop() {
     }
       else if (voltage > 15.5) {
       Serial.println("Full Charge");
+      String str2=String("https://kettle-dashboard.vercel.app/update_fluid?percent2=")+String("50");
+      sendHttpRequest(str2);  
       display.fillRect(80, 37, 16, 20, SH110X_BLACK);
       display.drawBitmap(80, 39, bat_2, 16, 16, 1);
       display.display();  
       
     } else if (voltage >= 15) {
       Serial.println("Empty!");
+      String str2=String("https://kettle-dashboard.vercel.app/update_fluid?percent2=")+String("25");
+      sendHttpRequest(str2);  
       display.fillRect(80, 37, 16, 20, SH110X_BLACK);
       display.drawBitmap(80, 39, bat_1, 16, 16, 1);
       display.display();
@@ -210,9 +268,29 @@ void loop() {
     } 
       else if (voltage <= 14.7) {
       Serial.println("Empty!");
+      String str2=String("https://kettle-dashboard.vercel.app/update_fluid?percent2=")+String("0");
+      sendHttpRequest(str2);  
       display.fillRect(80, 37, 16, 20, SH110X_BLACK);
       display.drawBitmap(80, 39, bat_0, 16, 16, 1);
       display.display();
       
     } 
   }
+  void sendHttpRequest(String url) {
+  HTTPClient http;
+  
+  Serial.print("Sending HTTP request to: ");
+  Serial.println(url);
+
+  // Your ESP32 should be connected to the Wi-Fi before sending the request
+  http.begin(url);
+
+  int httpCode = http.GET();
+  if (httpCode > 0) {
+    Serial.printf("HTTP request successful, response code: %d\n", httpCode);
+  } else {
+    Serial.printf("HTTP request failed, error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+}
